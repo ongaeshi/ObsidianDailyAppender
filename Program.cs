@@ -292,7 +292,7 @@ void PostToObsidian(string arg)
     else
     {
         string time = DateTime.Now.ToString("HH:mm");
-        text = $"---\n{time} {arg}\n";
+        text = $"\n---\n{time} {arg}";
     }
 
     try
