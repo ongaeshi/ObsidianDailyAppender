@@ -10,9 +10,9 @@ AnsiConsole.Write(
         .LeftJustified()
         .Color(Color.Blue));
 
-AnsiConsole.MarkupLine("[bold blue]--- Obsidian 追記モード (exit または Ctrl+C で終了) ---[/]");
+AnsiConsole.MarkupLine("[bold blue]--- Obsidian Daily Appender (exit または Ctrl+C で終了) ---[/]");
 AnsiConsole.MarkupLine("[grey]Shift+Enter: 改行, Enter: 送信[/]");
-AnsiConsole.MarkupLine("[grey]↑/↓/←/→キー: カーソル移動, Backspace/Delete: 編集[/]");
+AnsiConsole.MarkupLine("[grey]↑/↓/←/→キー: カーソル移動, Backspace/Delete: 削除[/]");
 AnsiConsole.WriteLine();
 
 while (true)
