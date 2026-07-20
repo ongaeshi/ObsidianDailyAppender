@@ -113,10 +113,11 @@ string? ReadMultiLineInput()
     void SetCursor()
     {
         int visualX = GetVisualWidth(lines[cursorY].ToString(), cursorX);
+        int left = Math.Min(visualX + 2, Console.WindowWidth - 1);
         int top = startTop + cursorY;
         if (top < 0) top = 0;
         if (top >= Console.BufferHeight) top = Console.BufferHeight - 1;
-        Console.SetCursorPosition(visualX + 2, top);
+        Console.SetCursorPosition(left, top);
     }
 
     RedrawAll();
