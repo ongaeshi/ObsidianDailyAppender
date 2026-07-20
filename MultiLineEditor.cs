@@ -12,6 +12,7 @@ namespace ObsidianDailyAppender
         private int _cursorRow = 0; // logical row
         private int _cursorCol = 0; // logical col (character index)
         private int _startTop = 0;
+        private int _idealVisualX = -1;
 
         public string? Read()
         {
@@ -96,31 +97,11 @@ namespace ObsidianDailyAppender
                 }
                 else if (key.Key == ConsoleKey.UpArrow)
                 {
-                    if (_cursorRow > 0)
-                    {
-                        _cursorRow--;
-                        _cursorCol = Math.Min(_cursorCol, _lines[_cursorRow].Length);
-                        SetCursor();
-                    }
-                    else
-                    {
-                        _cursorCol = 0;
-                        SetCursor();
-                    }
+                    MoveVertical(-1);
                 }
                 else if (key.Key == ConsoleKey.DownArrow)
                 {
-                    if (_cursorRow < _lines.Count - 1)
-                    {
-                        _cursorRow++;
-                        _cursorCol = Math.Min(_cursorCol, _lines[_cursorRow].Length);
-                        SetCursor();
-                    }
-                    else
-                    {
-                        _cursorCol = _lines[_cursorRow].Length;
-                        SetCursor();
-                    }
+                    MoveVertical(1);
                 }
                 else if (key.Key == ConsoleKey.Backspace)
                 {
@@ -173,9 +154,101 @@ namespace ObsidianDailyAppender
                     CheckScroll();
                     RedrawAll(_cursorRow);
                 }
+            // Reset ideal X on any other key
+            if (key.Key != ConsoleKey.UpArrow && key.Key != ConsoleKey.DownArrow)
+            {
+                _idealVisualX = -1;
+            }
             }
 
             return string.Join("\n", _lines.Select(sb => sb.ToString()));
+        }
+
+        private void MoveVertical(int deltaPhysicalRows)
+        {
+            GetCurrentPhysicalPos(out int currentPhysicalRowOffset, out int currentVisualX);
+            if (_idealVisualX == -1) _idealVisualX = currentVisualX;
+
+            if (deltaPhysicalRows < 0) // Up
+            {
+                if (currentPhysicalRowOffset > 0)
+                {
+                    _cursorCol = GetLogicalColFromPhysicalPos(_cursorRow, currentPhysicalRowOffset - 1, _idealVisualX);
+                    SetCursor();
+                }
+                else if (_cursorRow > 0)
+                {
+                    _cursorRow--;
+                    int prevLogicalPhysicalCount = GetPhysicalLines(_lines[_cursorRow].ToString()).Count;
+                    _cursorCol = GetLogicalColFromPhysicalPos(_cursorRow, prevLogicalPhysicalCount - 1, _idealVisualX);
+                    SetCursor();
+                }
+            }
+            else // Down
+            {
+                int currentLogicalPhysicalCount = GetPhysicalLines(_lines[_cursorRow].ToString()).Count;
+
+                if (currentPhysicalRowOffset < currentLogicalPhysicalCount - 1)
+                {
+                    _cursorCol = GetLogicalColFromPhysicalPos(_cursorRow, currentPhysicalRowOffset + 1, _idealVisualX);
+                    SetCursor();
+                }
+                else if (_cursorRow < _lines.Count - 1)
+                {
+                    _cursorRow++;
+                    _cursorCol = GetLogicalColFromPhysicalPos(_cursorRow, 0, _idealVisualX);
+                    SetCursor();
+                }
+            }
+        }
+
+        private void GetCurrentPhysicalPos(out int physicalRowOffset, out int visualX)
+        {
+            string currentLogicalLine = _lines[_cursorRow].ToString();
+            string textBeforeCursor = currentLogicalLine.Substring(0, _cursorCol);
+            var pLinesBefore = GetPhysicalLines(textBeforeCursor);
+            physicalRowOffset = pLinesBefore.Count - 1;
+            if (physicalRowOffset < 0) physicalRowOffset = 0;
+            
+            visualX = 0;
+            if (pLinesBefore.Count > 0)
+            {
+                visualX = GetVisualWidth(pLinesBefore.Last());
+            }
+            
+            if (visualX + 2 >= Console.WindowWidth)
+            {
+                visualX = 0;
+                physicalRowOffset++;
+            }
+        }
+
+        private int GetLogicalColFromPhysicalPos(int logicalRow, int targetPhysicalRowOffset, int targetVisualX)
+        {
+            var pLines = GetPhysicalLines(_lines[logicalRow].ToString());
+            if (pLines.Count == 0) return 0;
+            if (targetPhysicalRowOffset >= pLines.Count) targetPhysicalRowOffset = pLines.Count - 1;
+            
+            int logicalCol = 0;
+            for (int i = 0; i < targetPhysicalRowOffset; i++)
+            {
+                logicalCol += pLines[i].Length;
+            }
+            
+            string targetLine = pLines[targetPhysicalRowOffset];
+            int currentVisualX = 0;
+            for (int i = 0; i < targetLine.Length; i++)
+            {
+                int charWidth = GetCharVisualWidth(targetLine[i]);
+                if (currentVisualX + charWidth > targetVisualX)
+                {
+                    break;
+                }
+                currentVisualX += charWidth;
+                logicalCol++;
+            }
+            
+            return logicalCol;
         }
 
         private void CheckScroll()
