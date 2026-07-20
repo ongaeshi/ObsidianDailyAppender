@@ -8,11 +8,15 @@ namespace ObsidianDailyAppender
 {
     public class MultiLineEditor
     {
+        public List<string> History { get; set; } = new();
+
         private List<StringBuilder> _lines = new() { new StringBuilder() };
         private int _cursorRow = 0; // logical row
         private int _cursorCol = 0; // logical col (character index)
         private int _startTop = 0;
         private int _idealVisualX = -1;
+        private int _historyIndex = -1;
+        private string _draftText = "";
 
         public string? Read()
         {
@@ -22,6 +26,8 @@ namespace ObsidianDailyAppender
                 Console.SetCursorPosition(0, Console.CursorTop - 1);
             }
             _startTop = Console.CursorTop;
+            _historyIndex = History.Count;
+            _draftText = "";
 
             RedrawAll();
 
@@ -97,11 +103,25 @@ namespace ObsidianDailyAppender
                 }
                 else if (key.Key == ConsoleKey.UpArrow)
                 {
-                    MoveVertical(-1);
+                    if (key.Modifiers.HasFlag(ConsoleModifiers.Alt))
+                    {
+                        LoadHistory(-1);
+                    }
+                    else
+                    {
+                        MoveVertical(-1);
+                    }
                 }
                 else if (key.Key == ConsoleKey.DownArrow)
                 {
-                    MoveVertical(1);
+                    if (key.Modifiers.HasFlag(ConsoleModifiers.Alt))
+                    {
+                        LoadHistory(1);
+                    }
+                    else
+                    {
+                        MoveVertical(1);
+                    }
                 }
                 else if (key.Key == ConsoleKey.Backspace)
                 {
@@ -188,6 +208,10 @@ namespace ObsidianDailyAppender
                     _cursorCol = 0;
                     SetCursor();
                 }
+                else
+                {
+                    LoadHistory(-1);
+                }
             }
             else // Down
             {
@@ -209,7 +233,54 @@ namespace ObsidianDailyAppender
                     _cursorCol = _lines[_cursorRow].Length;
                     SetCursor();
                 }
+                else
+                {
+                    LoadHistory(1);
+                }
             }
+        }
+
+        private void LoadHistory(int direction)
+        {
+            if (History.Count == 0) return;
+
+            if (_historyIndex == History.Count && direction < 0)
+            {
+                _draftText = string.Join("\n", _lines.Select(sb => sb.ToString()));
+            }
+
+            int nextIndex = _historyIndex + direction;
+            if (nextIndex < 0 || nextIndex > History.Count)
+            {
+                return;
+            }
+
+            _historyIndex = nextIndex;
+
+            string textToLoad = "";
+            if (_historyIndex == History.Count)
+            {
+                textToLoad = _draftText;
+            }
+            else
+            {
+                textToLoad = History[_historyIndex];
+            }
+
+            _lines = textToLoad.Split('\n').Select(line => new StringBuilder(line)).ToList();
+            
+            if (direction < 0)
+            {
+                _cursorRow = _lines.Count - 1;
+                _cursorCol = _lines[_cursorRow].Length;
+            }
+            else
+            {
+                _cursorRow = 0;
+                _cursorCol = 0;
+            }
+            
+            RedrawAll();
         }
 
         private void GetCurrentPhysicalPos(out int physicalRowOffset, out int visualX)

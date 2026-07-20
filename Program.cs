@@ -14,10 +14,12 @@ AnsiConsole.MarkupLine("[bold blue]--- Obsidian Daily Appender (exit または C
 AnsiConsole.MarkupLine("[grey]Shift+Enter: 改行, Enter: 送信[/]");
 AnsiConsole.MarkupLine("[grey]↑/↓/←/→キー: カーソル移動, Backspace/Delete: 削除[/]");
 AnsiConsole.WriteLine();
+var history = new List<string>();
 
 while (true)
 {
     var editor = new ObsidianDailyAppender.MultiLineEditor();
+    editor.History = history;
     var input = editor.Read();
     
     if (input == null)
@@ -33,6 +35,7 @@ while (true)
 
     if (!string.IsNullOrWhiteSpace(text))
     {
+        history.Add(text);
         PostToObsidian(text);
         AnsiConsole.WriteLine();
     }
