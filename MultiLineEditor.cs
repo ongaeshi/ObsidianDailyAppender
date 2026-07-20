@@ -183,6 +183,11 @@ namespace ObsidianDailyAppender
                     _cursorCol = GetLogicalColFromPhysicalPos(_cursorRow, prevLogicalPhysicalCount - 1, _idealVisualX);
                     SetCursor();
                 }
+                else if (_cursorCol > 0)
+                {
+                    _cursorCol = 0;
+                    SetCursor();
+                }
             }
             else // Down
             {
@@ -197,6 +202,11 @@ namespace ObsidianDailyAppender
                 {
                     _cursorRow++;
                     _cursorCol = GetLogicalColFromPhysicalPos(_cursorRow, 0, _idealVisualX);
+                    SetCursor();
+                }
+                else if (_cursorCol < _lines[_cursorRow].Length)
+                {
+                    _cursorCol = _lines[_cursorRow].Length;
                     SetCursor();
                 }
             }
