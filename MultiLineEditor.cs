@@ -17,6 +17,7 @@ namespace ObsidianDailyAppender
         private int _idealVisualX = -1;
         private int _historyIndex = -1;
         private string _draftText = "";
+        private int _maxPhysicalLinesDrawn = 0;
 
         public string? Read()
         {
@@ -280,6 +281,7 @@ namespace ObsidianDailyAppender
                 _cursorCol = 0;
             }
             
+            CheckScroll();
             RedrawAll();
         }
 
@@ -386,8 +388,15 @@ namespace ObsidianDailyAppender
                 }
             }
 
+            int currentTotalPhysical = physicalTop - _startTop;
+            if (currentTotalPhysical > _maxPhysicalLinesDrawn)
+            {
+                _maxPhysicalLinesDrawn = currentTotalPhysical;
+            }
+
             int clearTop = physicalTop;
-            for (int i = 0; i < 5; i++)
+            int linesToClear = Math.Max(5, _maxPhysicalLinesDrawn - currentTotalPhysical + 1);
+            for (int i = 0; i < linesToClear; i++)
             {
                 if (clearTop + i >= Console.BufferHeight) break;
                 Console.SetCursorPosition(0, clearTop + i);
