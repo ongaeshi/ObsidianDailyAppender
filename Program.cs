@@ -13,6 +13,7 @@ AnsiConsole.Write(
 AnsiConsole.MarkupLine("[bold blue]--- Obsidian Daily Appender (exit または Ctrl+C で終了) ---[/]");
 AnsiConsole.MarkupLine("[grey]Shift+Enter: 改行, Enter: 送信[/]");
 AnsiConsole.MarkupLine("[grey]↑/↓/←/→キー: カーソル移動, Backspace/Delete: 削除[/]");
+AnsiConsole.MarkupLine("[grey]Alt+↑/↓ (または境界で↑/↓): 入力履歴の呼び出し[/]");
 AnsiConsole.WriteLine();
 var history = new List<string>();
 
